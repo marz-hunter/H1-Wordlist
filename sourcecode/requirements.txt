@@ -1,1 +1,15 @@
-will be updated soon...
+# will be updated soon...
+appdirs==1.4.4
+certifi==2020.6.20
+chardet==3.0.4
+filelock==3.0.12
+idna==2.10
+pyfiglet==0.8.post1
+requests==2.24.0
+requests-file==1.5.1
+six==1.15.0
+termcolor==1.1.0
+tldextract==2.2.2
+uritools==3.0.0
+urlextract==1.0.0
+urllib3==1.25.9
