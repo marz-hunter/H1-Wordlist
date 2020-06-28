@@ -35,6 +35,7 @@ Arguments:
 ```
 Example usage:
 ```
+mkdir wordlists
 python3 create_wordlist.py --dataset dataset.csv --output wordlists/ --entropy 4
 ```
 
