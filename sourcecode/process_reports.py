@@ -15,6 +15,8 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
 
+from datetime import datetime
+
 class HTTPRequest(BaseHTTPRequestHandler):
     def __init__(self, request_text):
         self.rfile = BytesIO(request_text)
@@ -193,6 +195,17 @@ for report in reports:
     for element in elements:
         for a,b in extract(report,element):
             try:
+                weakness = "None"
+                if "weakness" in readReport:
+                    weakness = readReport["weakness"]["name"]
+                severity = "None"
+                if "severity_rating" in readReport:
+                    severity = str(readReport["severity_rating"]).capitalize()
+                program = readReport["team"]["handle"]
+
+                date = datetime.strptime(readReport["created_at"],"%Y-%m-%dT%H:%M:%S.%fZ") # converting time to datetime object
+                date = date.strftime("%x") # date format is month-day-year
+                
                 if a == "url":
                     url,raw_url = "",""
                     if ( (b.startswith("http://http%3A%2F%2F")) or ( b.startswith("http://https%3A%2F%2F") )):
@@ -210,7 +223,7 @@ for report in reports:
                     get_params = ",".join(get_params)
 
                     if ((f"{str(domain.domain)}.{str(domain.suffix)}".lower() in blacklistedDomains) == False) and ((str(domain.subdomain) in blacklistedSubdomains) == False):
-                        results.append((reportid, b, "GET", domain.subdomain, domain.domain, domain.suffix, url.path, url.fragment, url.query, "", get_params, "", "", ""))
+                        results.append( (reportid, date, program, severity, weakness, b, "GET", domain.subdomain, domain.domain, domain.suffix, url.path, url.fragment, url.query, "", get_params, "", "", "") )
                 elif a == "request":
                     if "Host" in b.headers:
                         if ((b.path.startswith("/")) == False):
@@ -249,10 +262,11 @@ for report in reports:
                             pass
 
                         if ((f"{str(domain.domain)}.{str(domain.suffix)}".lower() in blacklistedDomains) == False) and ((str(domain.subdomain) in blacklistedSubdomains) == False):
-                            results.append( (reportid, raw_url, b.command, domain.subdomain, domain.domain, domain.suffix, url.path, url.fragment, url.query, post_data, get_params, post_parameters, json_parameters, ",".join(list(b.headers)) ) )
+                            results.append( (reportid, date, program, severity, weakness, raw_url, b.command, domain.subdomain, domain.domain, domain.suffix, url.path, url.fragment, url.query, post_data, get_params, post_parameters, json_parameters, ",".join(list(b.headers)) ) )
                 elif a == "justparameter":
                     url,domain = urlparse(""),tldextract("")
                     raw_url = ""
+
                     if (bool(readReport)) and ("structured_scope" in readReport) and bool(readReport["structured_scope"]) and ("asset_type" in readReport["structured_scope"]) and ((" " in readReport["structured_scope"]["asset_identifier"]) == False):
                         asset_data = str(readReport["structured_scope"]["asset_identifier"]).replace("*","www")
                         asset_type = readReport["structured_scope"]["asset_type"]
@@ -263,8 +277,9 @@ for report in reports:
                         elif asset_type == "URL":
                             url = urlparse(raw_url)
                             domain = tldextract(url.netloc)
+                    
                     if re.match(re.compile("^[A-Za-z0-9_\-.]+$"),clearBrackets(b)):
-                        results.append((reportid, raw_url, "GET", domain.subdomain, domain.domain, domain.suffix, url.path, url.fragment, url.query, "", b, "", "", ""))
+                        results.append((reportid, date, program, severity, weakness, raw_url, "GET", domain.subdomain, domain.domain, domain.suffix, url.path, url.fragment, url.query, "", b, "", "", ""))
             except Exception as e:
                 unsuccessful(f"Got exception: \"{str(e)}\", Line: {sys.exc_info()[-1].tb_lineno}")
                 pass
@@ -274,7 +289,7 @@ results = list(set(results)) # remove duplicates of results throught
 successful("Got {} results.".format( format(len(results),",")) )
 
 writer = csv.writer(open(args.output, 'w+', newline=''))
-writer.writerow(["id", "url", "method", "subdomain","domain","tld","path","fragment","query_string","post_data","get_parameters","post_parameters","json_parameters","headers"])
+writer.writerow(["id", "date", "program", "severity", "weakness", "url", "method", "subdomain","domain","tld","path","fragment","query_string","post_data","get_parameters","post_parameters","json_parameters","headers"])
 for result in results:
     writer.writerow(result)
 

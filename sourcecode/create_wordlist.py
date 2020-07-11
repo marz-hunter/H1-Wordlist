@@ -60,7 +60,7 @@ blacklistedChars = ["`",")","(",",","&","]]","&gt","&amp",":",".","&am"]
 log("Started to read dataset.")
 
 for row in list(read_dataset)[1:]:
-    report_id,url,request_method,subdomain,domain,tld,path,fragment,query_string,post_data,get_parameters,post_parameters,json_parameters,headers = row
+    report_id,report_date,report_program,report_severity,report_weakness,url,request_method,subdomain,domain,tld,path,fragment,query_string,post_data,get_parameters,post_parameters,json_parameters,headers = row
     
     wordlist["subdomains"] += subdomain.split(".")
 
